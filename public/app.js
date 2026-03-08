@@ -820,17 +820,21 @@ async function loadAIStatus() {
         const status = await res.json();
 
         const cards = {
-            'ai-gemini': { configured: status.geminiConfigured, active: status.provider === 'gemini' },
-            'ai-openai': { configured: status.openaiConfigured, active: status.provider === 'openai' },
-            'ai-claude': { configured: status.claudeConfigured, active: status.provider === 'claude' }
+            'ai-gemini': { configured: status.geminiConfigured, active: status.provider === 'gemini', model: status.geminiModel },
+            'ai-openai': { configured: status.openaiConfigured, active: status.provider === 'openai', model: status.openaiModel },
+            'ai-claude': { configured: status.claudeConfigured, active: status.provider === 'claude', model: status.claudeModel }
         };
 
         for (const [id, info] of Object.entries(cards)) {
             const card = document.getElementById(id);
             if (!card) continue;
             card.className = 'ai-card' + (info.active && info.configured ? ' active' : info.configured ? ' configured' : '');
-            card.querySelector('.ai-card-status').textContent =
-                info.active && info.configured ? '✅ Active Agent' : info.configured ? '🔑 Key Set' : '❌ Not configured';
+            const statusText = info.active && info.configured
+                ? `✅ Active · ${info.model}`
+                : info.configured
+                    ? `🔑 Key Set · ${info.model}`
+                    : '❌ Not configured';
+            card.querySelector('.ai-card-status').textContent = statusText;
         }
 
         if (document.getElementById('ai-provider')) {
@@ -840,17 +844,68 @@ async function loadAIStatus() {
 }
 
 function initAISettings() {
-    // Save button
+    // Test Key buttons - for each provider
+    const providers = [
+        { name: 'gemini', keyId: 'ai-gemini-key', statusId: 'gemini-key-status', modelId: 'gemini-model', testBtnId: 'test-gemini-btn' },
+        { name: 'openai', keyId: 'ai-openai-key', statusId: 'openai-key-status', modelId: 'openai-model', testBtnId: 'test-openai-btn' },
+        { name: 'claude', keyId: 'ai-claude-key', statusId: 'claude-key-status', modelId: 'claude-model', testBtnId: 'test-claude-btn' }
+    ];
+
+    for (const p of providers) {
+        document.getElementById(p.testBtnId)?.addEventListener('click', async () => {
+            const apiKey = document.getElementById(p.keyId).value.trim();
+            if (!apiKey) {
+                document.getElementById(p.statusId).innerHTML = '<span style="color:var(--red)">⚠️ Enter an API key first</span>';
+                return;
+            }
+
+            const statusEl = document.getElementById(p.statusId);
+            statusEl.innerHTML = '<span style="color:var(--text-muted)">🔄 Testing key...</span>';
+
+            try {
+                const res = await fetch(`${API}/api/ai/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: p.name, apiKey })
+                });
+                const data = await res.json();
+
+                if (data.valid) {
+                    statusEl.innerHTML = `<span style="color:var(--green)">✅ Key valid! ${data.models.length} models available</span>`;
+
+                    // Populate model dropdown
+                    const select = document.getElementById(p.modelId);
+                    if (select && data.models.length > 0) {
+                        const currentVal = select.value;
+                        select.innerHTML = data.models.map(m =>
+                            `<option value="${escapeHtml(m.id)}" ${m.id === currentVal ? 'selected' : ''}>${escapeHtml(m.id)}${m.description ? ' — ' + escapeHtml(m.description.substring(0, 50)) : ''}</option>`
+                        ).join('');
+                    }
+                } else {
+                    statusEl.innerHTML = `<span style="color:var(--red)">❌ Invalid: ${escapeHtml(data.error || 'Unknown error')}</span>`;
+                }
+            } catch (err) {
+                statusEl.innerHTML = `<span style="color:var(--red)">❌ Test failed: ${escapeHtml(err.message)}</span>`;
+            }
+        });
+    }
+
+    // Save button - includes models
     document.getElementById('ai-save-btn')?.addEventListener('click', async () => {
         const settings = {
             AI_PROVIDER: document.getElementById('ai-provider').value,
             GEMINI_API_KEY: document.getElementById('ai-gemini-key').value,
             OPENAI_API_KEY: document.getElementById('ai-openai-key').value,
-            CLAUDE_API_KEY: document.getElementById('ai-claude-key').value
+            CLAUDE_API_KEY: document.getElementById('ai-claude-key').value,
+            GEMINI_MODEL: document.getElementById('gemini-model').value,
+            OPENAI_MODEL: document.getElementById('openai-model').value,
+            CLAUDE_MODEL: document.getElementById('claude-model').value
         };
 
         // Remove empty keys so they don't overwrite existing ones
-        Object.keys(settings).forEach(k => { if (!settings[k] && k !== 'AI_PROVIDER') delete settings[k]; });
+        Object.keys(settings).forEach(k => {
+            if (!settings[k] && !k.endsWith('_MODEL') && k !== 'AI_PROVIDER') delete settings[k];
+        });
 
         try {
             const res = await fetch(`${API}/api/ai/settings`, {
@@ -867,7 +922,7 @@ function initAISettings() {
         }
     });
 
-    // Test button
+    // Test AI Analysis button
     document.getElementById('ai-test-btn')?.addEventListener('click', async () => {
         const url = document.getElementById('ai-test-url').value.trim();
         if (!url) { alert('Enter a URL to test'); return; }
@@ -883,9 +938,10 @@ function initAISettings() {
                 body: JSON.stringify({ url, type: 'manual_test' })
             });
             const data = await res.json();
+            const success = data.success !== false;
             respEl.innerHTML = `
-                <div class="ai-provider-badge">${escapeHtml(data.provider || 'unknown')}</div>
-                <div>${escapeHtml(data.response || 'No response')}</div>
+                <div class="ai-provider-badge">${escapeHtml(data.provider || 'unknown')} · ${escapeHtml(data.model || '')}</div>
+                <div style="color:${success ? 'var(--text-primary)' : 'var(--red)'}">${escapeHtml(data.response || 'No response')}</div>
             `;
         } catch (err) {
             respEl.innerHTML = `<div style="color:var(--red)">❌ AI analysis failed: ${escapeHtml(err.message)}</div>`;

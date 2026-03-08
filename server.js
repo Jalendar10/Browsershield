@@ -18,7 +18,7 @@ const { analyzeAdsInHistory } = require('./src/core/ad-tracker');
 const { readAllExtensions, getExtensionStats } = require('./src/core/extension-reader');
 const ProcessMonitor = require('./src/core/process-monitor');
 const { getActiveConnections, getBandwidthStats, detectHiddenPackets, formatBytes } = require('./src/core/network-monitor');
-const { analyzeThreat, getAIStatus, loadEnv, saveEnv } = require('./src/core/ai-agents');
+const { analyzeThreat, getAIStatus, loadEnv, saveEnv, validateKey } = require('./src/core/ai-agents');
 
 const PORT = 3847;
 const app = express();
@@ -407,6 +407,21 @@ app.post('/api/ai/settings', (req, res) => {
         res.json({ ok: true, status: getAIStatus() });
     } catch (err) {
         res.status(500).json({ error: 'Failed to save AI settings', details: err.message });
+    }
+});
+
+/**
+ * POST /api/ai/validate
+ * Validates API key and returns available models
+ */
+app.post('/api/ai/validate', async (req, res) => {
+    try {
+        const { provider, apiKey } = req.body;
+        if (!provider || !apiKey) return res.status(400).json({ error: 'Provider and API key required' });
+        const result = await validateKey(provider, apiKey);
+        res.json(result);
+    } catch (err) {
+        res.status(500).json({ error: 'Validation failed', details: err.message });
     }
 });
 

@@ -504,6 +504,7 @@
                 </div>
               </div>
             </div>
+
             <div class="panel glass" style="margin-bottom:16px">
               <div class="panel-header">
                 <h2>⚙️ Configure AI Keys</h2>
@@ -516,18 +517,68 @@
                       <option value="openai">OpenAI</option>
                       <option value="claude">Claude</option>
                     </select></div>
-                  <div class="form-group"><label>Gemini API Key</label><input type="password" id="ai-gemini-key"
-                      placeholder="Enter Gemini API key..." class="form-input"></div>
-                  <div class="form-group"><label>OpenAI API Key</label><input type="password" id="ai-openai-key"
-                      placeholder="Enter OpenAI API key..." class="form-input"></div>
-                  <div class="form-group"><label>Claude API Key</label><input type="password" id="ai-claude-key"
-                      placeholder="Enter Claude API key..." class="form-input"></div>
-                  <button class="btn btn-primary" id="ai-save-btn" style="width:100%;margin-top:8px">💾 Save AI
+
+                  <!-- Gemini -->
+                  <div class="form-group"
+                    style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px">
+                    <label style="font-size:13px;font-weight:700;color:var(--text-primary)">💎 Gemini</label>
+                    <div style="display:flex;gap:8px;margin-top:4px">
+                      <input type="password" id="ai-gemini-key" placeholder="Enter Gemini API key..." class="form-input"
+                        style="flex:1">
+                      <button class="btn btn-sm btn-primary" id="test-gemini-btn">🔑 Test Key</button>
+                    </div>
+                    <div id="gemini-key-status" style="font-size:11px;margin-top:4px"></div>
+                    <div class="form-group" style="margin-top:6px;margin-bottom:0">
+                      <label>Model</label>
+                      <select id="gemini-model" class="select-sm" style="width:100%">
+                        <option value="gemini-2.0-flash">gemini-2.0-flash (default)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- OpenAI -->
+                  <div class="form-group"
+                    style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px">
+                    <label style="font-size:13px;font-weight:700;color:var(--text-primary)">🧠 OpenAI</label>
+                    <div style="display:flex;gap:8px;margin-top:4px">
+                      <input type="password" id="ai-openai-key" placeholder="Enter OpenAI API key..." class="form-input"
+                        style="flex:1">
+                      <button class="btn btn-sm btn-primary" id="test-openai-btn">🔑 Test Key</button>
+                    </div>
+                    <div id="openai-key-status" style="font-size:11px;margin-top:4px"></div>
+                    <div class="form-group" style="margin-top:6px;margin-bottom:0">
+                      <label>Model</label>
+                      <select id="openai-model" class="select-sm" style="width:100%">
+                        <option value="gpt-4o-mini">gpt-4o-mini (default)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Claude -->
+                  <div class="form-group"
+                    style="border:1px solid var(--border);border-radius:8px;padding:12px;margin-top:8px">
+                    <label style="font-size:13px;font-weight:700;color:var(--text-primary)">🟣 Claude</label>
+                    <div style="display:flex;gap:8px;margin-top:4px">
+                      <input type="password" id="ai-claude-key" placeholder="Enter Claude API key..." class="form-input"
+                        style="flex:1">
+                      <button class="btn btn-sm btn-primary" id="test-claude-btn">🔑 Test Key</button>
+                    </div>
+                    <div id="claude-key-status" style="font-size:11px;margin-top:4px"></div>
+                    <div class="form-group" style="margin-top:6px;margin-bottom:0">
+                      <label>Model</label>
+                      <select id="claude-model" class="select-sm" style="width:100%">
+                        <option value="claude-3-5-haiku-latest">claude-3-5-haiku-latest (default)</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button class="btn btn-primary" id="ai-save-btn" style="width:100%;margin-top:12px">💾 Save All
                     Settings</button>
                   <div id="ai-save-status" style="margin-top:8px;font-size:12px;color:#10b981"></div>
                 </div>
               </div>
             </div>
+
             <div class="panel glass">
               <div class="panel-header">
                 <h2>🧪 Test AI Analysis</h2>
