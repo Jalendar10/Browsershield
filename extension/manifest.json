@@ -1,0 +1,58 @@
+{
+    "manifest_version": 3,
+    "name": "BrowserShield Security Monitor",
+    "short_name": "BrowserShield",
+    "version": "2.0.0",
+    "description": "Real-time browser security — threat analysis, ad blocking, tracker detection, time tracking, hidden URL scanner.",
+    "permissions": [
+        "activeTab",
+        "tabs",
+        "storage",
+        "scripting",
+        "webRequest",
+        "declarativeNetRequest",
+        "declarativeNetRequestFeedback",
+        "management"
+    ],
+    "host_permissions": [
+        "http://localhost:3847/*",
+        "<all_urls>"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "<all_urls>"
+            ],
+            "js": [
+                "content.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ],
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": {
+            "16": "icons/icon16.png",
+            "48": "icons/icon48.png",
+            "128": "icons/icon128.png"
+        },
+        "default_title": "BrowserShield"
+    },
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "declarative_net_request": {
+        "rule_resources": [
+            {
+                "id": "ad_blocker_rules",
+                "enabled": true,
+                "path": "rules.json"
+            }
+        ]
+    }
+}

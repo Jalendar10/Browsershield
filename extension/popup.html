@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BrowserShield</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="popup">
+        <!-- Header -->
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">🛡️</div>
+                <div class="header-text">
+                    <span class="header-title">BrowserShield</span>
+                    <span class="header-sub" id="server-status">Connecting...</span>
+                </div>
+            </div>
+            <div class="header-right">
+                <span class="blocked-pill" id="blocked-pill">🚫 <span id="blocked-count">0</span> blocked</span>
+                <div class="live-dot" id="live-dot"></div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-bar">
+            <button class="tab active" data-tab="security">🛡️ Security</button>
+            <button class="tab" data-tab="time">⏱️ Time</button>
+            <button class="tab" data-tab="extensions">🧩 Extensions</button>
+            <button class="tab" data-tab="settings">⚙️ Settings</button>
+        </div>
+
+        <!-- TAB: Security -->
+        <div class="tab-content active" id="tab-security">
+            <!-- Threat Score -->
+            <div class="threat-section">
+                <div class="score-circle" id="score-circle">
+                    <svg viewBox="0 0 100 100">
+                        <circle class="score-bg" cx="50" cy="50" r="42" />
+                        <circle class="score-fill" id="score-fill" cx="50" cy="50" r="42" />
+                    </svg>
+                    <span class="score-text" id="score-text">--</span>
+                </div>
+                <div class="threat-info">
+                    <div class="threat-level" id="threat-level">Analyzing...</div>
+                    <div class="threat-url" id="threat-url">-</div>
+                    <div class="threat-ip" id="threat-ip"></div>
+                    <div class="threat-time" id="threat-time"></div>
+                </div>
+            </div>
+
+            <!-- Threat flags -->
+            <div class="threats-list" id="threats-list"></div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <span class="stat-icon">🔍</span>
+                    <span class="stat-value" id="tracker-count">-</span>
+                    <span class="stat-label">Trackers</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">🚫</span>
+                    <span class="stat-value" id="ad-count">-</span>
+                    <span class="stat-label">Ads</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">👁️</span>
+                    <span class="stat-value" id="hidden-count">-</span>
+                    <span class="stat-label">Hidden</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">📄</span>
+                    <span class="stat-value" id="element-count">-</span>
+                    <span class="stat-label">Scanned</span>
+                </div>
+            </div>
+
+            <!-- Hidden Elements -->
+            <div class="section" id="hidden-section" style="display:none;">
+                <div class="section-header" onclick="toggleSection('hidden-list')">
+                    <span>🕵️ Hidden Elements</span>
+                    <span class="badge" id="hidden-badge">0</span>
+                </div>
+                <div class="items-list collapsed" id="hidden-list"></div>
+            </div>
+
+            <!-- Trackers -->
+            <div class="section" id="tracker-section" style="display:none;">
+                <div class="section-header" onclick="toggleSection('tracker-list')">
+                    <span>🔍 Trackers Found</span>
+                    <span class="badge" id="tracker-badge">0</span>
+                </div>
+                <div class="items-list collapsed" id="tracker-list"></div>
+            </div>
+
+            <!-- Ad Elements -->
+            <div class="section" id="ad-section" style="display:none;">
+                <div class="section-header" onclick="toggleSection('ad-list')">
+                    <span>📢 Ad Elements</span>
+                    <span class="badge" id="ad-badge">0</span>
+                </div>
+                <div class="items-list collapsed" id="ad-list"></div>
+            </div>
+        </div>
+
+        <!-- TAB: Time -->
+        <div class="tab-content" id="tab-time">
+            <div class="time-header">
+                <h3>Time Spent on Sites</h3>
+                <span class="time-total" id="time-total">Total: -</span>
+            </div>
+            <div class="time-list" id="time-list">
+                <div class="empty-msg">Loading time data...</div>
+            </div>
+        </div>
+
+        <!-- TAB: Extensions -->
+        <div class="tab-content" id="tab-extensions">
+            <div class="ext-header-row">
+                <h3>Browser Extensions</h3>
+                <span class="ext-total" id="ext-total">0</span>
+            </div>
+            <div class="ext-list" id="ext-list">
+                <div class="empty-msg">Loading extensions...</div>
+            </div>
+        </div>
+
+        <!-- TAB: Settings -->
+        <div class="tab-content" id="tab-settings">
+            <h3 class="settings-title">Settings</h3>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-name">🚫 Ad Blocker</span>
+                    <span class="setting-desc">Block ads and trackers (50 networks)</span>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="setting-adblock" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-name">⏱️ Time Tracking</span>
+                    <span class="setting-desc">Track time spent on each domain</span>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="setting-time" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-row">
+                <div class="setting-info">
+                    <span class="setting-name">🔔 Threat Alerts</span>
+                    <span class="setting-desc">Show warnings for risky pages</span>
+                </div>
+                <label class="toggle">
+                    <input type="checkbox" id="setting-notifications" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+
+            <div class="setting-section">
+                <h4>Custom Block List</h4>
+                <div class="url-input-row">
+                    <input type="text" id="block-url-input" placeholder="Enter domain to block...">
+                    <button class="add-btn" id="add-block-btn">+ Add</button>
+                </div>
+                <div class="url-list" id="block-list"></div>
+            </div>
+
+            <div class="setting-section">
+                <h4>Custom Allow List</h4>
+                <div class="url-input-row">
+                    <input type="text" id="allow-url-input" placeholder="Enter domain to allow...">
+                    <button class="add-btn" id="add-allow-btn">+ Add</button>
+                </div>
+                <div class="url-list" id="allow-list"></div>
+            </div>
+
+            <div class="setting-footer">
+                <a href="http://localhost:3847" target="_blank" class="dashboard-link">Open Full Dashboard ↗</a>
+                <button class="rescan-btn" id="rescan-btn">🔄 Rescan Page</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

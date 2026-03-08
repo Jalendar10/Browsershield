@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="BrowserShield — Real-time browser security monitoring">
+  <title>🛡️ BrowserShield — Browser Security Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="app">
+    <nav class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <div class="logo-icon">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+          </div>
+          <div class="logo-text">
+            <span class="logo-title">BrowserShield</span>
+            <span class="logo-subtitle">Security Monitor</span>
+          </div>
+        </div>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Main</span>
+        <a href="#" class="nav-item active" data-section="dashboard" id="nav-dashboard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" rx="1" />
+            <rect x="14" y="3" width="7" height="7" rx="1" />
+            <rect x="3" y="14" width="7" height="7" rx="1" />
+            <rect x="14" y="14" width="7" height="7" rx="1" />
+          </svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-section="activity" id="nav-activity">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+          </svg>
+          <span>Live Activity</span>
+          <span class="nav-badge pulse" id="activity-badge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="history" id="nav-history">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <polyline points="12 6 12 12 16 14" />
+          </svg>
+          <span>History</span>
+        </a>
+        <a href="#" class="nav-item" data-section="bookmarks" id="nav-bookmarks">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+          </svg>
+          <span>Bookmarks</span>
+        </a>
+        <a href="#" class="nav-item" data-section="apps" id="nav-apps">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="9" height="9" rx="2" />
+            <rect x="13" y="2" width="9" height="9" rx="2" />
+            <rect x="2" y="13" width="9" height="9" rx="2" />
+            <rect x="13" y="13" width="9" height="9" rx="2" />
+          </svg>
+          <span>Apps</span>
+          <span class="nav-badge" id="apps-badge">0</span>
+        </a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label">Security</span>
+        <a href="#" class="nav-item" data-section="extensions" id="nav-extensions">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+          </svg>
+          <span>Extensions</span>
+          <span class="nav-badge" id="ext-badge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="threats" id="nav-threats">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+          <span>Threats</span>
+          <span class="nav-badge danger" id="threat-badge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="ads" id="nav-ads">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" />
+            <line x1="9" y1="3" x2="9" y2="21" />
+            <line x1="15" y1="3" x2="15" y2="21" />
+            <line x1="3" y1="9" x2="21" y2="9" />
+            <line x1="3" y1="15" x2="21" y2="15" />
+          </svg>
+          <span>Ads & Trackers</span>
+          <span class="nav-badge" id="ads-badge">0</span>
+        </a>
+        <a href="#" class="nav-item" data-section="network" id="nav-network">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+          </svg>
+          <span>Network</span>
+        </a>
+        <a href="#" class="nav-item" data-section="ai-settings" id="nav-ai">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+          <span>AI Settings</span>
+        </a>
+      </div>
+      <div class="sidebar-footer">
+        <div class="system-status">
+          <div class="status-dot online" id="status-dot"></div>
+          <span id="status-text">Monitoring Active</span>
+        </div>
+        <div class="browser-icons" id="browser-icons"></div>
+      </div>
+    </nav>
+    <main class="main-content">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menu-toggle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="3" y1="12" x2="21" y2="12" />
+              <line x1="3" y1="6" x2="21" y2="6" />
+              <line x1="3" y1="18" x2="21" y2="18" />
+            </svg>
+          </button>
+          <h1 class="page-title" id="page-title">Dashboard</h1>
+        </div>
+        <div class="topbar-right">
+          <div class="url-scanner">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input type="text" id="url-scan-input" placeholder="Scan a URL for threats..." autocomplete="off">
+            <button id="url-scan-btn" class="scan-btn">Scan</button>
+          </div>
+          <div class="live-indicator" id="live-indicator">
+            <span class="live-dot"></span>
+            <span>LIVE</span>
+          </div>
+        </div>
+      </header>
+      <div class="content-area" id="content-area">
+        <!-- DASHBOARD -->
+        <section class="section active" id="section-dashboard">
+          <div class="stats-grid" id="stats-grid">
+            <div class="stat-card glass">
+              <div class="stat-icon browsers"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="2" y1="12" x2="22" y2="12" />
+                  <path
+                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg></div>
+              <div class="stat-info"><span class="stat-value" id="stat-browsers-count">-</span><span
+                  class="stat-label">Browsers Detected</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon urls"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                </svg></div>
+              <div class="stat-info"><span class="stat-value" id="stat-urls-count">-</span><span class="stat-label">URLs
+                  Scanned (7d)</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon safe"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg></div>
+              <div class="stat-info"><span class="stat-value" id="stat-safe-count">-</span><span class="stat-label">Safe
+                  URLs</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon threats"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg></div>
+              <div class="stat-info"><span class="stat-value" id="stat-threats-count">-</span><span
+                  class="stat-label">Threats Found</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon"
+                style="background:linear-gradient(135deg,rgba(245,158,11,0.2),rgba(245,158,11,0.05));color:#f59e0b"><svg
+                  width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="2" width="9" height="9" rx="2" />
+                  <rect x="13" y="2" width="9" height="9" rx="2" />
+                  <rect x="2" y="13" width="9" height="9" rx="2" />
+                  <rect x="13" y="13" width="9" height="9" rx="2" />
+                </svg></div>
+              <div class="stat-info"><span class="stat-value" id="stat-apps-count">-</span><span class="stat-label">Apps
+                  Installed</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon"
+                style="background:linear-gradient(135deg,rgba(168,85,247,0.2),rgba(168,85,247,0.05));color:#a855f7"><svg
+                  width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                </svg></div>
+              <div class="stat-info"><span class="stat-value" id="stat-ext-count">-</span><span
+                  class="stat-label">Extensions</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon"
+                style="background:linear-gradient(135deg,rgba(251,146,60,0.2),rgba(251,146,60,0.05));color:#fb923c"><svg
+                  width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <line x1="9" y1="3" x2="9" y2="21" />
+                </svg></div>
+              <div class="stat-info"><span class="stat-value" id="stat-ads-count">-</span><span class="stat-label">Ads
+                  Blocked</span></div>
+            </div>
+          </div>
+          <div class="dashboard-grid">
+            <div class="panel glass">
+              <div class="panel-header">
+                <h2>Detected Browsers</h2>
+              </div>
+              <div class="panel-body" id="detected-browsers-list">
+                <div class="loading-skeleton"></div>
+              </div>
+            </div>
+            <div class="panel glass">
+              <div class="panel-header">
+                <h2>Top Domains (7d)</h2>
+              </div>
+              <div class="panel-body" id="top-domains-list">
+                <div class="loading-skeleton"></div>
+              </div>
+            </div>
+            <div class="panel glass full-width">
+              <div class="panel-header">
+                <h2>Activity Heatmap (24h)</h2>
+              </div>
+              <div class="panel-body">
+                <div class="heatmap-chart" id="heatmap-chart"></div>
+              </div>
+            </div>
+            <div class="panel glass full-width">
+              <div class="panel-header">
+                <h2>Threat Breakdown</h2>
+              </div>
+              <div class="panel-body">
+                <div class="risk-bars" id="risk-bars"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+        <!-- LIVE ACTIVITY -->
+        <section class="section" id="section-activity">
+          <div class="section-toolbar">
+            <h2>Live Activity Stream</h2>
+            <div class="toolbar-actions"><button class="btn btn-sm" id="activity-clear">Clear</button><button
+                class="btn btn-sm btn-primary" id="activity-pause"><span id="pause-icon">⏸</span> Pause</button></div>
+          </div>
+          <div class="activity-stream" id="activity-stream">
+            <div class="empty-state" id="activity-empty"><svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="1.5">
+                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+              </svg>
+              <p>Waiting for browsing activity...</p><span>Browse the web in any detected browser to see live updates
+                here</span>
+            </div>
+          </div>
+        </section>
+        <!-- HISTORY -->
+        <section class="section" id="section-history">
+          <div class="section-toolbar">
+            <h2>Browsing History</h2>
+            <div class="toolbar-actions">
+              <div class="browser-tabs" id="history-browser-tabs"></div><select class="select-sm" id="history-days">
+                <option value="1">Today</option>
+                <option value="7" selected>Last 7 days</option>
+                <option value="30">Last 30 days</option>
+                <option value="90">Last 90 days</option>
+              </select>
+              <div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg><input type="text" id="history-search" placeholder="Filter history..."></div>
+            </div>
+          </div>
+          <div class="data-table-wrapper">
+            <table class="data-table" id="history-table">
+              <thead>
+                <tr>
+                  <th class="col-browser">Browser</th>
+                  <th class="col-title">Title</th>
+                  <th class="col-url">URL</th>
+                  <th class="col-visits">Visits</th>
+                  <th class="col-date">Last Visit</th>
+                  <th class="col-risk">Risk</th>
+                </tr>
+              </thead>
+              <tbody id="history-tbody">
+                <tr>
+                  <td colspan="6" class="loading-cell">Loading history...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer"><span id="history-count">0 entries</span></div>
+        </section>
+        <!-- BOOKMARKS -->
+        <section class="section" id="section-bookmarks">
+          <div class="section-toolbar">
+            <h2>Bookmarks</h2>
+            <div class="toolbar-actions">
+              <div class="browser-tabs" id="bookmarks-browser-tabs"></div>
+              <div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg><input type="text" id="bookmarks-search" placeholder="Filter bookmarks..."></div>
+            </div>
+          </div>
+          <div class="bookmarks-grid" id="bookmarks-grid">
+            <div class="loading-skeleton"></div>
+          </div>
+          <div class="table-footer"><span id="bookmarks-count">0 bookmarks</span></div>
+        </section>
+        <!-- THREATS -->
+        <section class="section" id="section-threats">
+          <div class="section-toolbar">
+            <h2>Threat Analysis</h2>
+            <div class="toolbar-actions"><select class="select-sm" id="threat-filter">
+                <option value="all">All Levels</option>
+                <option value="critical">Critical</option>
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select></div>
+          </div>
+          <div class="threats-list" id="threats-list">
+            <div class="loading-skeleton"></div>
+          </div>
+        </section>
+        <!-- APPS -->
+        <section class="section" id="section-apps">
+          <div class="section-toolbar">
+            <h2>Installed Applications</h2>
+            <div class="toolbar-actions"><select class="select-sm" id="apps-category-filter">
+                <option value="all">All Categories</option>
+                <option value="browser">Browsers</option>
+                <option value="development">Development</option>
+                <option value="productivity">Productivity</option>
+                <option value="communication">Communication</option>
+                <option value="media">Media</option>
+                <option value="security">Security</option>
+                <option value="social">Social</option>
+                <option value="utilities">Utilities</option>
+                <option value="cloud">Cloud</option>
+                <option value="gaming">Gaming</option>
+                <option value="other">Other</option>
+              </select>
+              <div class="search-box"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg><input type="text" id="apps-search" placeholder="Filter apps..."></div>
+            </div>
+          </div>
+          <div class="apps-grid" id="apps-grid">
+            <div class="loading-skeleton"></div>
+          </div>
+          <div class="table-footer"><span id="apps-count">0 apps</span></div>
+        </section>
+        <!-- EXTENSIONS -->
+        <section class="section" id="section-extensions">
+          <div class="section-toolbar">
+            <h2>Browser Extensions</h2>
+            <div class="toolbar-actions"><select class="select-sm" id="ext-risk-filter">
+                <option value="all">All Risk Levels</option>
+                <option value="high">High Risk</option>
+                <option value="medium">Medium Risk</option>
+                <option value="low">Low Risk</option>
+                <option value="safe">Safe</option>
+              </select></div>
+          </div>
+          <div class="extensions-grid" id="extensions-grid">
+            <div class="loading-skeleton"></div>
+          </div>
+          <div class="table-footer"><span id="ext-count">0 extensions</span></div>
+        </section>
+        <!-- ADS & TRACKERS -->
+        <section class="section" id="section-ads">
+          <div class="section-toolbar">
+            <h2>Ads & Trackers</h2>
+          </div>
+          <div class="ads-stats" id="ads-stats">
+            <div class="loading-skeleton"></div>
+          </div>
+          <div class="ads-networks" id="ads-networks"></div>
+          <div class="ads-entries" id="ads-entries"></div>
+        </section>
+        <!-- NETWORK -->
+        <section class="section" id="section-network">
+          <div class="section-toolbar">
+            <h2>Network Monitor</h2>
+            <div class="toolbar-actions"><button class="btn btn-sm btn-primary" id="network-refresh">🔄 Refresh</button>
+            </div>
+          </div>
+          <div class="stats-grid" id="network-stats">
+            <div class="stat-card glass">
+              <div class="stat-icon"
+                style="background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(16,185,129,0.05));color:#10b981">⬇️
+              </div>
+              <div class="stat-info"><span class="stat-value" id="net-download">-</span><span
+                  class="stat-label">Downloaded</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon"
+                style="background:linear-gradient(135deg,rgba(99,102,241,0.2),rgba(99,102,241,0.05));color:#6366f1">⬆️
+              </div>
+              <div class="stat-info"><span class="stat-value" id="net-upload">-</span><span
+                  class="stat-label">Uploaded</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon"
+                style="background:linear-gradient(135deg,rgba(6,182,212,0.2),rgba(6,182,212,0.05));color:#06b6d4">🔗
+              </div>
+              <div class="stat-info"><span class="stat-value" id="net-connections">-</span><span
+                  class="stat-label">Active Connections</span></div>
+            </div>
+            <div class="stat-card glass">
+              <div class="stat-icon"
+                style="background:linear-gradient(135deg,rgba(239,68,68,0.2),rgba(239,68,68,0.05));color:#ef4444">⚠️
+              </div>
+              <div class="stat-info"><span class="stat-value" id="net-suspicious">0</span><span
+                  class="stat-label">Suspicious</span></div>
+            </div>
+          </div>
+          <div class="panel glass" style="margin:16px">
+            <div class="panel-header">
+              <h2>Active Connections</h2>
+            </div>
+            <div class="panel-body" style="max-height:300px;overflow-y:auto">
+              <table class="data-table" id="connections-table">
+                <thead>
+                  <tr>
+                    <th>Process</th>
+                    <th>Remote Address</th>
+                    <th>State</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="connections-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="panel glass" style="margin:16px" id="hidden-threats-panel" style="display:none">
+            <div class="panel-header">
+              <h2>🚨 Hidden Packet Threats</h2>
+            </div>
+            <div class="panel-body" id="hidden-threats-list"></div>
+          </div>
+        </section>
+        <!-- AI SETTINGS -->
+        <section class="section" id="section-ai-settings">
+          <div class="section-toolbar">
+            <h2>AI Security Agents</h2>
+          </div>
+          <div class="ai-settings-content" style="padding:16px">
+            <div class="panel glass" style="margin-bottom:16px">
+              <div class="panel-header">
+                <h2>🤖 AI Agent Status</h2>
+              </div>
+              <div class="panel-body">
+                <div class="ai-status-grid" id="ai-status-grid">
+                  <div class="ai-card" id="ai-gemini">
+                    <div class="ai-card-icon">💎</div>
+                    <div class="ai-card-name">Gemini</div>
+                    <div class="ai-card-status">Not configured</div>
+                  </div>
+                  <div class="ai-card" id="ai-openai">
+                    <div class="ai-card-icon">🧠</div>
+                    <div class="ai-card-name">OpenAI</div>
+                    <div class="ai-card-status">Not configured</div>
+                  </div>
+                  <div class="ai-card" id="ai-claude">
+                    <div class="ai-card-icon">🟣</div>
+                    <div class="ai-card-name">Claude</div>
+                    <div class="ai-card-status">Not configured</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="panel glass" style="margin-bottom:16px">
+              <div class="panel-header">
+                <h2>⚙️ Configure AI Keys</h2>
+              </div>
+              <div class="panel-body">
+                <div class="ai-form">
+                  <div class="form-group"><label>Active Provider</label><select id="ai-provider" class="select-sm"
+                      style="width:100%">
+                      <option value="gemini">Gemini</option>
+                      <option value="openai">OpenAI</option>
+                      <option value="claude">Claude</option>
+                    </select></div>
+                  <div class="form-group"><label>Gemini API Key</label><input type="password" id="ai-gemini-key"
+                      placeholder="Enter Gemini API key..." class="form-input"></div>
+                  <div class="form-group"><label>OpenAI API Key</label><input type="password" id="ai-openai-key"
+                      placeholder="Enter OpenAI API key..." class="form-input"></div>
+                  <div class="form-group"><label>Claude API Key</label><input type="password" id="ai-claude-key"
+                      placeholder="Enter Claude API key..." class="form-input"></div>
+                  <button class="btn btn-primary" id="ai-save-btn" style="width:100%;margin-top:8px">💾 Save AI
+                    Settings</button>
+                  <div id="ai-save-status" style="margin-top:8px;font-size:12px;color:#10b981"></div>
+                </div>
+              </div>
+            </div>
+            <div class="panel glass">
+              <div class="panel-header">
+                <h2>🧪 Test AI Analysis</h2>
+              </div>
+              <div class="panel-body">
+                <input type="text" id="ai-test-url" placeholder="Enter a URL to test AI analysis..." class="form-input"
+                  style="margin-bottom:8px">
+                <button class="btn btn-primary" id="ai-test-btn" style="width:100%">🤖 Analyze with AI</button>
+                <div class="ai-response" id="ai-response" style="margin-top:12px;display:none"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <!-- URL Scan Modal -->
+  <div class="modal-overlay" id="scan-modal" style="display:none;">
+    <div class="modal glass">
+      <div class="modal-header">
+        <h3>URL Threat Analysis</h3><button class="modal-close" id="scan-modal-close">&times;</button>
+      </div>
+      <div class="modal-body" id="scan-result"></div>
+    </div>
+  </div>
+  <!-- URL Detail Modal -->
+  <div class="modal-overlay" id="url-detail-modal" style="display:none;">
+    <div class="modal glass" style="max-width:700px">
+      <div class="modal-header">
+        <h3 id="url-detail-title">URL Details</h3><button class="modal-close" id="url-detail-close">&times;</button>
+      </div>
+      <div class="modal-body" id="url-detail-body">
+        <div class="loading-skeleton"></div>
+      </div>
+    </div>
+  </div>
+  <script src="app.js"></script>
+</body>
+
+</html>
