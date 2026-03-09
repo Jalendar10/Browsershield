@@ -929,7 +929,7 @@ function initAISettings() {
 
         const respEl = document.getElementById('ai-response');
         respEl.style.display = 'block';
-        respEl.innerHTML = '<div style="text-align:center;padding:12px;color:var(--text-muted)">🤖 Analyzing with AI...</div>';
+        respEl.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-muted)">🤖 Analyzing with AI... (full report)</div>';
 
         try {
             const res = await fetch(`${API}/api/ai/analyze`, {
@@ -939,9 +939,17 @@ function initAISettings() {
             });
             const data = await res.json();
             const success = data.success !== false;
+
+            // Simple markdown to HTML
+            let html = escapeHtml(data.response || 'No response');
+            html = html.replace(/^## (.+)$/gm, '<h3 style="color:var(--text-primary);margin:12px 0 4px;font-size:14px">$1</h3>');
+            html = html.replace(/^- (.+)$/gm, '<li style="margin-left:16px;font-size:12px;line-height:1.6">$1</li>');
+            html = html.replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--text-primary)">$1</strong>');
+            html = html.replace(/\n/g, '<br>');
+
             respEl.innerHTML = `
                 <div class="ai-provider-badge">${escapeHtml(data.provider || 'unknown')} · ${escapeHtml(data.model || '')}</div>
-                <div style="color:${success ? 'var(--text-primary)' : 'var(--red)'}">${escapeHtml(data.response || 'No response')}</div>
+                <div class="ai-full-report" style="max-height:400px;overflow-y:auto;padding:12px;background:var(--bg-tertiary);border-radius:8px;font-size:12px;line-height:1.6;color:${success ? 'var(--text-secondary)' : 'var(--red)'}">${html}</div>
             `;
         } catch (err) {
             respEl.innerHTML = `<div style="color:var(--red)">❌ AI analysis failed: ${escapeHtml(err.message)}</div>`;

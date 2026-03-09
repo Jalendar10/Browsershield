@@ -1,6 +1,7 @@
 /**
- * BrowserShield Extension v2 — Background Service Worker
- * Features: URL analysis, time tracking, IP resolution, ad blocking stats, settings
+ * BrowserShield Extension v3 — Background Service Worker
+ * Features: URL analysis, time tracking, IP resolution, ad blocking stats,
+ *           network speed per site, hidden download detection, settings
  */
 
 const SERVER = 'http://localhost:3847';
@@ -9,6 +10,9 @@ const SERVER = 'http://localhost:3847';
 const urlCache = new Map();
 const MAX_CACHE = 500;
 let adsBlocked = 0;
+
+// ===== Network Tracking =====
+const networkData = {}; // { domain: { downloaded: bytes, uploaded: bytes, requests: count } }
 
 // ===== Default Settings =====
 const DEFAULT_SETTINGS = {
@@ -25,7 +29,7 @@ const BADGE_COLORS = {
     high: '#f97316', critical: '#ef4444', error: '#6b7280'
 };
 
-// ===== Initialize settings =====
+// ===== Initialize =====
 chrome.runtime.onInstalled.addListener(async () => {
     const stored = await chrome.storage.local.get('settings');
     if (!stored.settings) {
@@ -34,9 +38,11 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({
         adsBlocked: 0,
         timeData: {},
+        networkData: {},
+        hiddenDownloads: [],
         sessionStart: Date.now()
     });
-    console.log('[BrowserShield] Extension installed — v2.0');
+    console.log('[BrowserShield] Extension installed — v3.0');
 });
 
 // ===== TIME TRACKING =====
@@ -47,7 +53,7 @@ let activeTabStart = Date.now();
 async function recordTime() {
     if (!activeTabUrl || !activeTabStart) return;
     const elapsed = Date.now() - activeTabStart;
-    if (elapsed < 1000) return; // Skip under 1 second
+    if (elapsed < 1000) return;
 
     let domain;
     try { domain = new URL(activeTabUrl).hostname; } catch { return; }
@@ -68,7 +74,7 @@ async function recordTime() {
 
 // Track when tab changes
 chrome.tabs.onActivated.addListener(async (activeInfo) => {
-    await recordTime(); // save previous
+    await recordTime();
     activeTabStart = Date.now();
     try {
         const tab = await chrome.tabs.get(activeInfo.tabId);
@@ -103,8 +109,116 @@ setInterval(async () => {
     activeTabStart = Date.now();
 }, 30000);
 
+// ===== NETWORK SPEED TRACKING (per domain) =====
+// Track request sizes via webRequest
+chrome.webRequest.onCompleted.addListener(
+    (details) => {
+        try {
+            const url = new URL(details.url);
+            const domain = url.hostname;
+            if (!networkData[domain]) {
+                networkData[domain] = { downloaded: 0, uploaded: 0, requests: 0, hiddenRequests: [] };
+            }
+
+            // Estimate response size from Content-Length header
+            const contentLength = details.responseHeaders?.find(
+                h => h.name.toLowerCase() === 'content-length'
+            );
+            const size = contentLength ? parseInt(contentLength.value) || 0 : 0;
+
+            networkData[domain].downloaded += size;
+            networkData[domain].requests += 1;
+
+            // Detect hidden downloads — files downloading that aren't from the active tab
+            if (details.tabId !== activeTabId && details.tabId !== -1) {
+                const ext = url.pathname.split('.').pop()?.toLowerCase();
+                const suspiciousExts = ['exe', 'msi', 'dmg', 'pkg', 'zip', 'rar', 'bat', 'sh', 'ps1', 'dll', 'apk', 'deb'];
+                if (suspiciousExts.includes(ext) || size > 1000000) {
+                    networkData[domain].hiddenRequests.push({
+                        url: details.url,
+                        size,
+                        type: details.type,
+                        tabId: details.tabId,
+                        timestamp: Date.now()
+                    });
+                    // Alert
+                    notifyHiddenDownload(details.url, size, domain);
+                }
+            }
+
+            // Detect hidden downloads from active tab background requests
+            if (details.type === 'xmlhttprequest' || details.type === 'other') {
+                const activeDomain = activeTabUrl ? new URL(activeTabUrl).hostname : null;
+                if (activeDomain && domain !== activeDomain && size > 500000) {
+                    networkData[domain].hiddenRequests.push({
+                        url: details.url,
+                        size,
+                        type: details.type,
+                        reason: 'cross-domain-large',
+                        timestamp: Date.now()
+                    });
+                }
+            }
+
+            // Persist periodically
+            chrome.storage.local.set({ networkData });
+        } catch { }
+    },
+    { urls: ['<all_urls>'] },
+    ['responseHeaders']
+);
+
+// Track upload sizes via request body
+chrome.webRequest.onBeforeRequest.addListener(
+    (details) => {
+        try {
+            if (details.requestBody) {
+                const domain = new URL(details.url).hostname;
+                if (!networkData[domain]) {
+                    networkData[domain] = { downloaded: 0, uploaded: 0, requests: 0, hiddenRequests: [] };
+                }
+                let bodySize = 0;
+                if (details.requestBody.raw) {
+                    bodySize = details.requestBody.raw.reduce((sum, part) => sum + (part.bytes?.byteLength || 0), 0);
+                } else if (details.requestBody.formData) {
+                    bodySize = JSON.stringify(details.requestBody.formData).length;
+                }
+                networkData[domain].uploaded += bodySize;
+            }
+        } catch { }
+    },
+    { urls: ['<all_urls>'] },
+    ['requestBody']
+);
+
+async function notifyHiddenDownload(url, size, domain) {
+    const stored = await chrome.storage.local.get('hiddenDownloads');
+    const downloads = stored.hiddenDownloads || [];
+    downloads.unshift({ url, size, domain, timestamp: Date.now() });
+    if (downloads.length > 50) downloads.pop();
+    await chrome.storage.local.set({ hiddenDownloads: downloads });
+}
+
+// ===== DOWNLOAD MONITORING =====
+chrome.downloads?.onCreated?.addListener(async (downloadItem) => {
+    const stored = await chrome.storage.local.get('hiddenDownloads');
+    const downloads = stored.hiddenDownloads || [];
+    const entry = {
+        url: downloadItem.url,
+        filename: downloadItem.filename,
+        size: downloadItem.fileSize || downloadItem.totalBytes || 0,
+        domain: '',
+        mime: downloadItem.mime,
+        timestamp: Date.now(),
+        isUserInitiated: downloadItem.byExtensionId ? false : true
+    };
+    try { entry.domain = new URL(downloadItem.url).hostname; } catch { }
+    downloads.unshift(entry);
+    if (downloads.length > 50) downloads.pop();
+    await chrome.storage.local.set({ hiddenDownloads: downloads });
+});
+
 // ===== AD BLOCK COUNTER =====
-// Count blocked requests using declarativeNetRequest
 if (chrome.declarativeNetRequest?.onRuleMatchedDebug) {
     chrome.declarativeNetRequest.onRuleMatchedDebug.addListener(async () => {
         adsBlocked++;
@@ -116,7 +230,6 @@ if (chrome.declarativeNetRequest?.onRuleMatchedDebug) {
 // ===== IP RESOLUTION =====
 async function resolveIP(hostname) {
     try {
-        // Use DNS-over-HTTPS (Cloudflare)
         const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${hostname}&type=A`, {
             headers: { 'Accept': 'application/dns-json' },
             signal: AbortSignal.timeout(3000)
@@ -185,6 +298,15 @@ async function storeTabData(tabId, url, title, analysis) {
     });
 }
 
+// ===== FORMAT SIZE =====
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
+
 // ===== SETTINGS MANAGEMENT =====
 async function getSettings() {
     const stored = await chrome.storage.local.get('settings');
@@ -194,13 +316,9 @@ async function getSettings() {
 async function updateAdBlockRules(enabled) {
     try {
         if (enabled) {
-            await chrome.declarativeNetRequest.updateEnabledRulesets({
-                enableRulesetIds: ['ad_blocker_rules']
-            });
+            await chrome.declarativeNetRequest.updateEnabledRulesets({ enableRulesetIds: ['ad_blocker_rules'] });
         } else {
-            await chrome.declarativeNetRequest.updateEnabledRulesets({
-                disableRulesetIds: ['ad_blocker_rules']
-            });
+            await chrome.declarativeNetRequest.updateEnabledRulesets({ disableRulesetIds: ['ad_blocker_rules'] });
         }
     } catch (e) {
         console.log('[BrowserShield] Rule update error:', e.message);
@@ -218,19 +336,30 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
                 // Get time for this domain
                 let timeOnSite = 0;
+                let domain = '';
                 try {
-                    const domain = new URL(tabs[0].url).hostname;
+                    domain = new URL(tabs[0].url).hostname;
                     const stored = await chrome.storage.local.get('timeData');
                     timeOnSite = stored.timeData?.[domain]?.totalMs || 0;
-                    // Add current session
                     if (tabs[0].url === activeTabUrl) {
                         timeOnSite += Date.now() - activeTabStart;
                     }
                 } catch { }
 
+                // Get network data for this domain
+                const netStats = networkData[domain] || { downloaded: 0, uploaded: 0, requests: 0, hiddenRequests: [] };
+
                 sendResponse({
                     analysis, url: tabs[0].url, title: tabs[0].title,
-                    ip, timeOnSite
+                    ip, timeOnSite,
+                    networkStats: {
+                        downloaded: netStats.downloaded,
+                        uploaded: netStats.uploaded,
+                        downloadFormatted: formatBytes(netStats.downloaded),
+                        uploadFormatted: formatBytes(netStats.uploaded),
+                        requests: netStats.requests,
+                        hiddenRequests: netStats.hiddenRequests?.length || 0
+                    }
                 });
             } else {
                 sendResponse({ analysis: { riskLevel: 'safe', riskScore: 0, threats: [] }, url: '', title: '' });
@@ -249,6 +378,29 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     if (msg.type === 'getAdsBlocked') {
         chrome.storage.local.get('adsBlocked').then(stored => {
             sendResponse({ count: stored.adsBlocked || 0 });
+        });
+        return true;
+    }
+
+    if (msg.type === 'getNetworkData') {
+        // Return all network data for all domains
+        const entries = Object.entries(networkData).map(([domain, data]) => ({
+            domain,
+            downloaded: data.downloaded,
+            uploaded: data.uploaded,
+            downloadFormatted: formatBytes(data.downloaded),
+            uploadFormatted: formatBytes(data.uploaded),
+            requests: data.requests,
+            hiddenRequests: data.hiddenRequests?.length || 0
+        }));
+        entries.sort((a, b) => b.downloaded - a.downloaded);
+        sendResponse(entries);
+        return true;
+    }
+
+    if (msg.type === 'getHiddenDownloads') {
+        chrome.storage.local.get('hiddenDownloads').then(stored => {
+            sendResponse(stored.hiddenDownloads || []);
         });
         return true;
     }
@@ -272,7 +424,6 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         chrome.management?.getAll?.().then(exts => {
             sendResponse(exts || []);
         }).catch(() => {
-            // If management API not available, try server
             fetch(`${SERVER}/api/extensions`, { signal: AbortSignal.timeout(3000) })
                 .then(r => r.json())
                 .then(d => sendResponse(d.extensions || []))
@@ -304,4 +455,4 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
 chrome.action.setBadgeBackgroundColor({ color: BADGE_COLORS.safe });
 chrome.action.setBadgeText({ text: '' });
-console.log('[BrowserShield] Extension v2 loaded');
+console.log('[BrowserShield] Extension v3 loaded');

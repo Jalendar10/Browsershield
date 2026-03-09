@@ -9,6 +9,36 @@ const path = require('path');
 
 const ENV_PATH = path.join(__dirname, '..', '..', '.env');
 
+const FULL_REPORT_PROMPT = `You are BrowserShield AI Security Agent. Provide a FULL DETAILED security analysis report for the following threat data. Include ALL of these sections:
+
+## 🛡️ THREAT SUMMARY
+Describe what the threat is and its nature in detail.
+
+## ⚠️ RISK ASSESSMENT
+- Risk Level: Critical / High / Medium / Low / Safe
+- Risk Score: 0-100
+- Confidence: How confident you are in this assessment
+
+## 🔍 TECHNICAL ANALYSIS
+Explain the technical details of why this is/isn't a threat. Include:
+- Domain reputation analysis
+- URL pattern analysis
+- Known associations with malware/phishing/scam
+- SSL/TLS certificate concerns
+- Any suspicious indicators
+
+## 🚫 INDICATORS OF COMPROMISE (IoCs)
+List any suspicious indicators found (suspicious domains, IPs, patterns).
+
+## ✅ RECOMMENDED ACTIONS
+Specific steps the user should take: block, allow, investigate further, etc.
+
+## 📊 ADDITIONAL CONTEXT
+Any other relevant context about this type of threat.
+
+Threat Data:
+`;
+
 // ===== Load .env =====
 function loadEnv() {
     const keys = {
@@ -165,12 +195,12 @@ async function analyzeWithGemini(apiKey, model, threatData) {
             body: JSON.stringify({
                 contents: [{
                     parts: [{
-                        text: `You are BrowserShield AI Security Agent. Analyze this threat and provide a concise response (max 3 sentences) with: 1) What the threat is 2) Risk level (Critical/High/Medium/Low) 3) Recommended action.\n\nThreat Data:\n${JSON.stringify(threatData, null, 2)}`
+                        text: FULL_REPORT_PROMPT + JSON.stringify(threatData, null, 2)
                     }]
                 }],
-                generationConfig: { maxOutputTokens: 300, temperature: 0.3 }
+                generationConfig: { maxOutputTokens: 1500, temperature: 0.3 }
             }),
-            signal: AbortSignal.timeout(15000)
+            signal: AbortSignal.timeout(30000)
         }
     );
 
@@ -199,13 +229,13 @@ async function analyzeWithOpenAI(apiKey, model, threatData) {
         body: JSON.stringify({
             model: model,
             messages: [
-                { role: 'system', content: 'You are BrowserShield AI Security Agent. Analyze threats concisely (max 3 sentences): 1) What it is 2) Risk level 3) Action to take.' },
-                { role: 'user', content: `Analyze this threat:\n${JSON.stringify(threatData, null, 2)}` }
+                { role: 'system', content: 'You are BrowserShield AI Security Agent. Provide thorough, detailed security analysis reports.' },
+                { role: 'user', content: FULL_REPORT_PROMPT + JSON.stringify(threatData, null, 2) }
             ],
-            max_tokens: 300,
+            max_tokens: 1500,
             temperature: 0.3
         }),
-        signal: AbortSignal.timeout(15000)
+        signal: AbortSignal.timeout(30000)
     });
 
     const data = await res.json();
@@ -232,12 +262,12 @@ async function analyzeWithClaude(apiKey, model, threatData) {
         },
         body: JSON.stringify({
             model: model,
-            max_tokens: 300,
+            max_tokens: 1500,
             messages: [
-                { role: 'user', content: `You are BrowserShield AI Security Agent. Analyze this threat concisely (max 3 sentences): 1) What it is 2) Risk level 3) Action to take.\n\nThreat Data:\n${JSON.stringify(threatData, null, 2)}` }
+                { role: 'user', content: FULL_REPORT_PROMPT + JSON.stringify(threatData, null, 2) }
             ]
         }),
-        signal: AbortSignal.timeout(15000)
+        signal: AbortSignal.timeout(30000)
     });
 
     const data = await res.json();

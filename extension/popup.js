@@ -1,6 +1,6 @@
 /**
- * BrowserShield Extension v2 — Popup Logic
- * Tabs: Security, Time, Extensions, Settings
+ * BrowserShield Extension v3 — Popup Logic
+ * Tabs: Security, Network, Time, Extensions, Settings
  */
 
 const RISK_COLORS = {
@@ -35,6 +35,7 @@ function setupTabs() {
             document.getElementById(`tab-${target}`).classList.add('active');
 
             // Lazy load
+            if (target === 'network') loadNetworkTab();
             if (target === 'time') loadTimeTab();
             if (target === 'extensions') loadExtensionsTab();
             if (target === 'settings') loadSettings();
@@ -111,6 +112,18 @@ function loadSecurityTab() {
         flags.innerHTML = threats.map(t =>
             `<div class="threat-flag fade-in"><span>⚠️</span><span>${esc(t.message || t.type)}</span></div>`
         ).join('');
+
+        // Network stats for this site
+        if (response.networkStats) {
+            const ns = response.networkStats;
+            document.getElementById('site-download').textContent = ns.downloadFormatted || '0 B';
+            document.getElementById('site-upload').textContent = ns.uploadFormatted || '0 B';
+            document.getElementById('site-requests').textContent = ns.requests || 0;
+            document.getElementById('site-hidden').textContent = ns.hiddenRequests || 0;
+            if (ns.hiddenRequests > 0) {
+                document.getElementById('site-hidden').style.color = RISK_COLORS.critical;
+            }
+        }
     });
 }
 
@@ -153,6 +166,53 @@ function renderSection(name, items, typeKey, urlKey) {
       <span class="item-url" title="${esc(i[urlKey] || i.url || '')}">${esc(i[urlKey] || i.url || i.selector || '-')}</span>
     </div>`
     ).join('');
+}
+
+// ===== NETWORK TAB =====
+function loadNetworkTab() {
+    chrome.runtime.sendMessage({ type: 'getNetworkData' }, (entries) => {
+        const table = document.getElementById('net-table');
+        if (!entries || entries.length === 0) {
+            table.innerHTML = '<div class="empty-msg">No network data yet. Browse some pages!</div>';
+            return;
+        }
+
+        table.innerHTML = entries.slice(0, 30).map(e => {
+            const alertCls = e.hiddenRequests > 0 ? ' has-hidden' : '';
+            return `
+            <div class="net-row fade-in${alertCls}">
+                <div class="net-row-domain">${esc(e.domain)}</div>
+                <div class="net-row-stats">
+                    <span class="net-dl">⬇ ${esc(e.downloadFormatted)}</span>
+                    <span class="net-ul">⬆ ${esc(e.uploadFormatted)}</span>
+                    <span class="net-req">${e.requests} req</span>
+                    ${e.hiddenRequests > 0 ? `<span class="net-hidden">⚠️ ${e.hiddenRequests} hidden</span>` : ''}
+                </div>
+            </div>`;
+        }).join('');
+    });
+
+    // Load hidden download alerts
+    chrome.runtime.sendMessage({ type: 'getHiddenDownloads' }, (downloads) => {
+        const el = document.getElementById('hidden-download-alerts');
+        if (!downloads || downloads.length === 0) {
+            el.innerHTML = '';
+            return;
+        }
+        el.innerHTML = `<div class="hidden-alert">⚠️ ${downloads.length} background download(s) detected</div>` +
+            downloads.slice(0, 5).map(d => {
+                const size = d.size > 0 ? ` (${formatBytes(d.size)})` : '';
+                return `<div class="hidden-item">${esc(d.domain || 'unknown')}${size}</div>`;
+            }).join('');
+    });
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
 // ===== TIME TAB =====

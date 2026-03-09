@@ -2,8 +2,8 @@
     "manifest_version": 3,
     "name": "BrowserShield Security Monitor",
     "short_name": "BrowserShield",
-    "version": "2.0.0",
-    "description": "Real-time browser security — threat analysis, ad blocking, tracker detection, time tracking, hidden URL scanner.",
+    "version": "3.0.0",
+    "description": "Real-time browser security — threat analysis, ad blocking, tracker detection, time tracking, network speed monitoring, hidden download detection.",
     "permissions": [
         "activeTab",
         "tabs",
@@ -12,7 +12,8 @@
         "webRequest",
         "declarativeNetRequest",
         "declarativeNetRequestFeedback",
-        "management"
+        "management",
+        "downloads"
     ],
     "host_permissions": [
         "http://localhost:3847/*",
